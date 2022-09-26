@@ -10,6 +10,7 @@ import MoveSong_Transaction from './transactions/MoveSong_Transaction.js';
 
 // THESE REACT COMPONENTS ARE MODALS
 import DeleteListModal from './components/DeleteListModal.js';
+import EditSongModal from './components/EditSongModal.js';
 
 // THESE REACT COMPONENTS ARE IN OUR UI
 import Banner from './components/Banner.js';
@@ -36,6 +37,8 @@ class App extends React.Component {
         this.state = {
             listKeyPairMarkedForDeletion : null,
             currentList : null,
+            currentSong: null,
+            currentSongindex: null,
             sessionData : loadedSessionData
         }
     }
@@ -45,6 +48,26 @@ class App extends React.Component {
             return keyPair1.name.localeCompare(keyPair2.name);
         });
     }
+
+    updateSong = (songData) => {
+        let songs = this.state.currentList.songs;
+        songs[this.state.currentSongindex] = songData;
+
+        let updatedList = this.state.currentList;
+        updatedList.songs = songs;
+
+        this.setState(prevState => ({
+            listKeyPairMarkedForDeletion : prevState.listKeyPairMarkedForDeletion,
+            currentList: updatedList,
+            sessionData: prevState.sessionData,
+            currentSong: null,
+            currentSongindex: null,
+        }), () => {
+            this.db.mutationUpdateList (updatedList);
+        });
+        this.hideEditSongModal();
+    }
+
     // THIS FUNCTION BEGINS THE PROCESS OF CREATING A NEW LIST
     createNewList = () => {
         // FIRST FIGURE OUT WHAT THE NEW LIST'S KEY AND NAME WILL BE
@@ -180,6 +203,27 @@ class App extends React.Component {
             this.tps.clearAllTransactions();
         });
     }
+
+    editCurrentSong = (index) => {
+        this.loadCurrentSong(index);
+        this.showEditSongModal();
+    }
+
+    loadCurrentSong = (index) => {
+        const song = this.state.currentList.songs[index];
+        this.setState(prevState => ({
+            listKeyPairMarkedForDeletion : prevState.listKeyPairMarkedForDeletion,
+            currentList: prevState.currentList,
+            sessionData: prevState.sessionData,
+            currentSongindex : index,
+            currentSong: song,
+
+        }), () => {
+            // AN AFTER EFFECT IS THAT WE NEED TO MAKE SURE
+            // THE TRANSACTION STACK IS CLEARED
+            this.tps.clearAllTransactions();
+        });
+    }
     // THIS FUNCTION BEGINS THE PROCESS OF CLOSING THE CURRENT LIST
     closeCurrentList = () => {
         this.setState(prevState => ({
@@ -274,6 +318,20 @@ class App extends React.Component {
         let modal = document.getElementById("delete-list-modal");
         modal.classList.remove("is-visible");
     }
+
+
+    // THIS FUNCTION SHOWS THE MODAL FOR PROMPTING THE USER
+    // TO SEE IF THEY REALLY WANT TO EDIT A SONG
+    showEditSongModal() {
+        let modal = document.getElementById("edit-song-modal");
+        modal.classList.add("is-visible");
+    }
+    // THIS FUNCTION IS FOR HIDING THE MODAL
+    hideEditSongModal() {
+        let modal = document.getElementById("edit-song-modal");
+        modal.classList.remove("is-visible");
+    }
+
     render() {
         let canAddSong = this.state.currentList !== null;
         let canUndo = this.tps.hasTransactionToUndo();
@@ -303,13 +361,19 @@ class App extends React.Component {
                 />
                 <PlaylistCards
                     currentList={this.state.currentList}
-                    moveSongCallback={this.addMoveSongTransaction} />
+                    moveSongCallback={this.addMoveSongTransaction}
+                    editCurrentSongCallback={this.editCurrentSong} />
                 <Statusbar 
                     currentList={this.state.currentList} />
                 <DeleteListModal
                     listKeyPair={this.state.listKeyPairMarkedForDeletion}
                     hideDeleteListModalCallback={this.hideDeleteListModal}
                     deleteListCallback={this.deleteMarkedList}
+                />
+                <EditSongModal
+                    hideEditSongModalCallback={this.hideEditSongModal}
+                    song={this.state.currentSong}
+                    updateSongCallback={this.updateSong}
                 />
             </div>
         );

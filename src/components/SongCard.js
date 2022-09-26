@@ -11,7 +11,11 @@ export default class SongCard extends React.Component {
     }
     handleClick = (event) => {
         event.stopPropagation();
-        
+    }
+    handleDoubleClick = (event) => {
+        if (event.detail === 2) {
+            this.props.editCurrentSongCallback(this.props.index);
+        }
     }
     handleDragStart = (event) => {
         event.dataTransfer.setData("song", event.target.id);
@@ -67,7 +71,6 @@ export default class SongCard extends React.Component {
     render() {
         const { song } = this.props;
         let num = this.getItemNum();
-        console.log("num: " + num);
         let itemClass = "list-card unselected-list-card playlister-song";
         if (this.state.draggedTo) {
             itemClass += " playlister-song-dragged-to";
@@ -82,6 +85,7 @@ export default class SongCard extends React.Component {
                 onDragLeave={this.handleDragLeave}
                 onDrop={this.handleDrop}
                 draggable="true"
+                onClick={this.handleDoubleClick}
             >
                <span>{"" + num  + ". "} </span>
                <a className="playlist-link" href={"https://www.youtube.com/watch?v=" + song.youTubeId}> {song.title} by {song.artist} </a>
