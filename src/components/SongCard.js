@@ -9,6 +9,10 @@ export default class SongCard extends React.Component {
             draggedTo: false
         }
     }
+    handleClick = (event) => {
+        event.stopPropagation();
+        
+    }
     handleDragStart = (event) => {
         event.dataTransfer.setData("song", event.target.id);
         this.setState(prevState => ({
@@ -44,12 +48,14 @@ export default class SongCard extends React.Component {
         targetId = targetId.substring(target.id.indexOf("-") + 1);
         let sourceId = event.dataTransfer.getData("song");
         sourceId = sourceId.substring(sourceId.indexOf("-") + 1);
-        
+        if(sourceId === "" || targetId === ""){
+            alert("please drag the whole song card");
+            return;
+        }
         this.setState(prevState => ({
             isDragging: false,
             draggedTo: false
         }));
-
         // ASK THE MODEL TO MOVE THE DATA
         this.props.moveCallback(sourceId, targetId);
     }
@@ -62,9 +68,9 @@ export default class SongCard extends React.Component {
         const { song } = this.props;
         let num = this.getItemNum();
         console.log("num: " + num);
-        let itemClass = "playlister-song";
+        let itemClass = "list-card unselected-list-card playlister-song";
         if (this.state.draggedTo) {
-            itemClass = "playlister-song-dragged-to";
+            itemClass += " playlister-song-dragged-to";
         }
         return (
             <div
@@ -77,7 +83,16 @@ export default class SongCard extends React.Component {
                 onDrop={this.handleDrop}
                 draggable="true"
             >
-                {song.title} by {song.artist}
+               <span>{"" + num  + ". "} </span>
+               <a className="playlist-link" href={"https://www.youtube.com/watch?v=" + song.youTubeId}> {song.title} by {song.artist} </a>
+               
+               <input 
+                    type="button" 
+                    id={"remove-song-" + num} 
+                    className="list-card-button" 
+                    onClick={this.handleClick}
+                    value="&#x2715;" />
+
             </div>
         )
     }
