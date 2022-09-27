@@ -10,6 +10,7 @@ import MoveSong_Transaction from './transactions/MoveSong_Transaction.js';
 
 // THESE REACT COMPONENTS ARE MODALS
 import DeleteListModal from './components/DeleteListModal.js';
+import DeleteSongModal from './components/DeleteSongModal.js';
 import EditSongModal from './components/EditSongModal.js';
 
 // THESE REACT COMPONENTS ARE IN OUR UI
@@ -66,6 +67,26 @@ class App extends React.Component {
             this.db.mutationUpdateList (updatedList);
         });
         this.hideEditSongModal();
+    }
+
+    deleteSong = () => {
+        let songs = this.state.currentList.songs;
+        
+        songs.splice(this.state.currentSongindex, 1);
+
+        let updatedList = this.state.currentList;
+        updatedList.songs = songs;
+
+        this.setState(prevState => ({
+            listKeyPairMarkedForDeletion : prevState.listKeyPairMarkedForDeletion,
+            currentList: updatedList,
+            sessionData: prevState.sessionData,
+            currentSong: null,
+            currentSongindex: null,
+        }), () => {
+            this.db.mutationUpdateList (updatedList);
+        });
+        this.hideDeleteSongModal();
     }
 
     // THIS FUNCTION BEGINS THE PROCESS OF CREATING A NEW LIST
@@ -209,6 +230,11 @@ class App extends React.Component {
         this.showEditSongModal();
     }
 
+    deleteCurrentSong = (index) => {
+        this.loadCurrentSong(index);
+        this.showDeleteSongModal();
+    }
+
     loadCurrentSong = (index) => {
         const song = this.state.currentList.songs[index];
         this.setState(prevState => ({
@@ -332,6 +358,17 @@ class App extends React.Component {
         modal.classList.remove("is-visible");
     }
 
+
+    showDeleteSongModal() {
+        let modal = document.getElementById("remove-song-modal");
+        modal.classList.add("is-visible");
+    }
+   
+    hideDeleteSongModal() {
+        let modal = document.getElementById("remove-song-modal");
+        modal.classList.remove("is-visible");
+    }
+
     render() {
         let canAddSong = this.state.currentList !== null;
         let canUndo = this.tps.hasTransactionToUndo();
@@ -362,7 +399,9 @@ class App extends React.Component {
                 <PlaylistCards
                     currentList={this.state.currentList}
                     moveSongCallback={this.addMoveSongTransaction}
-                    editCurrentSongCallback={this.editCurrentSong} />
+                    editCurrentSongCallback={this.editCurrentSong}
+                    deleteCurrentSongCallback={this.deleteCurrentSong} 
+                />
                 <Statusbar 
                     currentList={this.state.currentList} />
                 <DeleteListModal
@@ -374,6 +413,12 @@ class App extends React.Component {
                     hideEditSongModalCallback={this.hideEditSongModal}
                     song={this.state.currentSong}
                     updateSongCallback={this.updateSong}
+                />
+
+                <DeleteSongModal
+                    song={this.state.currentSong}
+                    deleteSongCallback={this.deleteSong}
+                    hideDeleteSongModalCallback={this.hideDeleteSongModal}
                 />
             </div>
         );

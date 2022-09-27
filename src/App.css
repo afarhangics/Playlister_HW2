@@ -217,6 +217,10 @@ input {
   color:white;
 }
 
+#remove-song-span, #delete-list-span{
+  font-weight: bold;
+}
+
 .modal-center {
   display: grid;
   grid-template-columns: 30% 65%;

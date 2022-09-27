@@ -11,6 +11,7 @@ export default class SongCard extends React.Component {
     }
     handleClick = (event) => {
         event.stopPropagation();
+        this.props.deleteCurrentSongCallback(this.props.index);
     }
     handleDoubleClick = (event) => {
         if (event.detail === 2) {
