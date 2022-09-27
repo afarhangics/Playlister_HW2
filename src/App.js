@@ -71,7 +71,7 @@ class App extends React.Component {
 
     deleteSong = () => {
         let songs = this.state.currentList.songs;
-        
+
         songs.splice(this.state.currentSongindex, 1);
 
         let updatedList = this.state.currentList;
@@ -87,6 +87,28 @@ class App extends React.Component {
             this.db.mutationUpdateList (updatedList);
         });
         this.hideDeleteSongModal();
+    }
+
+    addSong = () => {
+        let song = {
+            "title": "Untitled",
+            "artist": "Unknown",
+            "youTubeId": "dQw4w9WgXcQ"
+        };
+        let songs = this.state.currentList.songs;
+        songs.push(song);
+        let updatedList = this.state.currentList;
+        updatedList.songs = songs;
+
+        this.setState(prevState => ({
+            listKeyPairMarkedForDeletion : prevState.listKeyPairMarkedForDeletion,
+            currentList: updatedList,
+            sessionData: prevState.sessionData,
+            currentSong: null,
+            currentSongindex: null,
+        }), () => {
+            this.db.mutationUpdateList (updatedList);
+        });
     }
 
     // THIS FUNCTION BEGINS THE PROCESS OF CREATING A NEW LIST
@@ -395,6 +417,7 @@ class App extends React.Component {
                     undoCallback={this.undo}
                     redoCallback={this.redo}
                     closeCallback={this.closeCurrentList}
+                    addSongCallback={this.addSong}
                 />
                 <PlaylistCards
                     currentList={this.state.currentList}
