@@ -7,6 +7,9 @@ import jsTPS from './common/jsTPS.js';
 
 // OUR TRANSACTIONS
 import MoveSong_Transaction from './transactions/MoveSong_Transaction.js';
+import CreateSong_Transaction from './transactions/CreateSong_Transaction.js';
+import RemoveSong_Transaction from './transactions/RemoveSong_Transaction.js';
+import UpdateSong_Transaction from './transactions/UpdateSong_Transaction.js';
 
 // THESE REACT COMPONENTS ARE MODALS
 import DeleteListModal from './components/DeleteListModal.js';
@@ -39,7 +42,7 @@ class App extends React.Component {
             listKeyPairMarkedForDeletion : null,
             currentList : null,
             currentSong: null,
-            currentSongindex: null,
+            currentSongIndex: null,
             sessionData : loadedSessionData
         }
     }
@@ -50,65 +53,94 @@ class App extends React.Component {
         });
     }
 
-    updateSong = (songData) => {
-        let songs = this.state.currentList.songs;
-        songs[this.state.currentSongindex] = songData;
+    updateSong = (index, songData) => {
+        const { currentList } = this.state;
+        let songs = currentList.songs;
+        songs[index] = songData;
 
-        let updatedList = this.state.currentList;
+        let updatedList = currentList;
         updatedList.songs = songs;
 
         this.setState(prevState => ({
             listKeyPairMarkedForDeletion : prevState.listKeyPairMarkedForDeletion,
             currentList: updatedList,
-            sessionData: prevState.sessionData,
+            sessionData: this.state.sessionData,
             currentSong: null,
-            currentSongindex: null,
+            currentSongIndex: null,
         }), () => {
             this.db.mutationUpdateList (updatedList);
         });
+    }
+    
+    addEditSongTransaction = (songData) => {
+        const { currentList, currentSongIndex } = this.state;
+        let song = currentList.songs[currentSongIndex];
+        let oldData = {
+            "title": song.title,
+            "artist": song.artist,
+            "youTubeId": song.youTubeId
+        };
+        let newData = {
+            "title": songData.title,
+            "artist": songData.artist,
+            "youTubeId": songData.youTubeId
+        };
+        let transaction = new UpdateSong_Transaction(this, currentSongIndex, oldData, newData);
+        this.tps.addTransaction(transaction);
         this.hideEditSongModal();
     }
 
-    deleteSong = () => {
-        let songs = this.state.currentList.songs;
+    removeSong = (index) => {
+        const { currentList } = this.state;
+        let songs = currentList.songs;
+        songs.splice(index, 1);
+        let updatedList = currentList;
+        updatedList.songs = songs;
+        this.setState(prevState => ({
+            listKeyPairMarkedForDeletion : prevState.listKeyPairMarkedForDeletion,
+            currentList: updatedList,
+            sessionData: this.state.sessionData,
+            currentSong: null,
+            currentSongIndex: null,
+        }), () => {
+            this.db.mutationUpdateList (updatedList);
+        });
+    }
 
-        songs.splice(this.state.currentSongindex, 1);
+    addRemoveSongTransaction = () => {
+        const { currentList, currentSongIndex } = this.state;
+        let song = currentList.songs[currentSongIndex];
+        let transaction = new RemoveSong_Transaction(this, currentSongIndex, song);
+        this.tps.addTransaction(transaction);
+        this.hideDeleteSongModal();
+    }
 
-        let updatedList = this.state.currentList;
+    createSong = (index, song) => {
+        const { currentList } = this.state;
+        let songs = currentList.songs;
+        songs.splice(index, 0, song);
+        let updatedList = currentList;
         updatedList.songs = songs;
 
         this.setState(prevState => ({
             listKeyPairMarkedForDeletion : prevState.listKeyPairMarkedForDeletion,
             currentList: updatedList,
-            sessionData: prevState.sessionData,
+            sessionData: this.state.sessionData,
             currentSong: null,
-            currentSongindex: null,
+            currentSongIndex: null,
         }), () => {
             this.db.mutationUpdateList (updatedList);
         });
-        this.hideDeleteSongModal();
     }
 
-    addSong = () => {
+    addAddSongTransaction = () => {
         let song = {
             "title": "Untitled",
             "artist": "Unknown",
             "youTubeId": "dQw4w9WgXcQ"
         };
-        let songs = this.state.currentList.songs;
-        songs.push(song);
-        let updatedList = this.state.currentList;
-        updatedList.songs = songs;
-
-        this.setState(prevState => ({
-            listKeyPairMarkedForDeletion : prevState.listKeyPairMarkedForDeletion,
-            currentList: updatedList,
-            sessionData: prevState.sessionData,
-            currentSong: null,
-            currentSongindex: null,
-        }), () => {
-            this.db.mutationUpdateList (updatedList);
-        });
+        let transaction = new CreateSong_Transaction(this, this.state.currentList.songs.length, song);
+        this.tps.addTransaction(transaction);
     }
 
     // THIS FUNCTION BEGINS THE PROCESS OF CREATING A NEW LIST
@@ -262,8 +294,8 @@ class App extends React.Component {
         this.setState(prevState => ({
             listKeyPairMarkedForDeletion : prevState.listKeyPairMarkedForDeletion,
             currentList: prevState.currentList,
-            sessionData: prevState.sessionData,
-            currentSongindex : index,
+            sessionData: this.state.sessionData,
+            currentSongIndex : index,
             currentSong: song,
 
         }), () => {
@@ -417,7 +449,7 @@ class App extends React.Component {
                     undoCallback={this.undo}
                     redoCallback={this.redo}
                     closeCallback={this.closeCurrentList}
-                    addSongCallback={this.addSong}
+                    addSongCallback={this.addAddSongTransaction}
                 />
                 <PlaylistCards
                     currentList={this.state.currentList}
@@ -435,12 +467,12 @@ class App extends React.Component {
                 <EditSongModal
                     hideEditSongModalCallback={this.hideEditSongModal}
                     song={this.state.currentSong}
-                    updateSongCallback={this.updateSong}
+                    updateSongCallback={this.addEditSongTransaction}
                 />
 
                 <DeleteSongModal
                     song={this.state.currentSong}
-                    deleteSongCallback={this.deleteSong}
+                    deleteSongCallback={this.addRemoveSongTransaction}
                     hideDeleteSongModalCallback={this.hideDeleteSongModal}
                 />
             </div>
