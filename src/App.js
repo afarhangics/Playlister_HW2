@@ -43,6 +43,7 @@ class App extends React.Component {
             currentList : null,
             currentSong: null,
             currentSongIndex: null,
+            editToolbarKey: 1,
             sessionData : loadedSessionData
         }
     }
@@ -276,7 +277,14 @@ class App extends React.Component {
             // AN AFTER EFFECT IS THAT WE NEED TO MAKE SURE
             // THE TRANSACTION STACK IS CLEARED
             this.tps.clearAllTransactions();
+            this.updatetoolBar();
         });
+    }
+
+    updatetoolBar = () => {
+        this.setState({
+            editToolbarKey: Math.floor((Math.random() * 10) + 1)
+        })
     }
 
     editCurrentSong = (index) => {
@@ -302,6 +310,7 @@ class App extends React.Component {
             // AN AFTER EFFECT IS THAT WE NEED TO MAKE SURE
             // THE TRANSACTION STACK IS CLEARED
             this.tps.clearAllTransactions();
+            this.updatetoolBar();
         });
     }
     // THIS FUNCTION BEGINS THE PROCESS OF CLOSING THE CURRENT LIST
@@ -314,6 +323,7 @@ class App extends React.Component {
             // AN AFTER EFFECT IS THAT WE NEED TO MAKE SURE
             // THE TRANSACTION STACK IS CLEARED
             this.tps.clearAllTransactions();
+            this.updatetoolBar();
         });
     }
     setStateWithUpdatedList(list) {
@@ -442,6 +452,7 @@ class App extends React.Component {
                     renameListCallback={this.renameList}
                 />
                 <EditToolbar
+                    key={this.state.editToolbarKey}
                     canAddSong={canAddSong}
                     canUndo={canUndo}
                     canRedo={canRedo}
