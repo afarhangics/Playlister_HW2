@@ -9,12 +9,28 @@ export default class ListCard extends React.Component {
             editActive: false,
         }
     }
+
+    componentDidUpdate(prevProps, prevState){
+
+        if (prevState.editActive !== this.state.editActive) {
+            if(this.state.editActive === true){
+                this.props.toggleEdditingListCallback(
+                    true
+                )
+            } 
+            if (this.state.editActive === false){
+                this.props.toggleEdditingListCallback(
+                    false
+                )
+            }
+        }
+    }
     handleClick = (event) => {
         if (event.detail === 1) {
             this.handleLoadList(event);
         }
         else if (event.detail === 2) {
-            this.handleToggleEdit(event);
+             this.handleToggleEdit(event);
         }
     }
     handleLoadList = (event) => {
@@ -33,6 +49,11 @@ export default class ListCard extends React.Component {
             editActive: !this.state.editActive
         });
     }
+    handleMouseLeave = (event) => {
+        this.setState({
+            editActive: false
+        });
+    }
     handleUpdate = (event) => {
         this.setState({ text: event.target.value });
     }
@@ -42,6 +63,9 @@ export default class ListCard extends React.Component {
         }
     }
     handleBlur = () => {
+        this.setState({
+            editActive: false
+        });
         let key = this.props.keyNamePair.key;
         let textValue = this.state.text;
         console.log("ListCard handleBlur: " + textValue);
@@ -61,6 +85,7 @@ export default class ListCard extends React.Component {
                     onKeyPress={this.handleKeyPress}
                     onBlur={this.handleBlur}
                     onChange={this.handleUpdate}
+                    onMouseLeave={this.handleMouseLeave}
                     defaultValue={keyNamePair.name}
                 />)
         }

@@ -4,8 +4,8 @@ export default class EditToolbar extends React.Component {
 
       keydownHandler = (e) => {
         const { canUndo, canRedo, undoCallback, redoCallback} = this.props;
+        if(e.key==='y' && e.ctrlKey && canRedo) redoCallback();
         if(e.key==='z' && e.ctrlKey && canUndo) undoCallback();
-        else if(e.key==='y' && e.ctrlKey && canRedo) redoCallback();
       }
       
       componentDidMount(){

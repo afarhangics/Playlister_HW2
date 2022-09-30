@@ -41,12 +41,19 @@ class App extends React.Component {
         this.state = {
             listKeyPairMarkedForDeletion : null,
             currentList : null,
+            editingList: false,
             currentSong: null,
             currentSongIndex: null,
             editToolbarKey: 1,
             sessionData : loadedSessionData
         }
     }
+    toggleEdditingList = (newState) => {
+        this.setState(prevState => ({
+            editingList: newState
+        }));
+    }
+
     sortKeyNamePairsByName = (keyNamePairs) => {
         keyNamePairs.sort((keyPair1, keyPair2) => {
             // GET THE LISTS
@@ -306,12 +313,7 @@ class App extends React.Component {
             currentSongIndex : index,
             currentSong: song,
 
-        }), () => {
-            // AN AFTER EFFECT IS THAT WE NEED TO MAKE SURE
-            // THE TRANSACTION STACK IS CLEARED
-            this.tps.clearAllTransactions();
-            this.updatetoolBar();
-        });
+        }));
     }
     // THIS FUNCTION BEGINS THE PROCESS OF CLOSING THE CURRENT LIST
     closeCurrentList = () => {
@@ -373,7 +375,7 @@ class App extends React.Component {
     undo = () => {
         if (this.tps.hasTransactionToUndo()) {
             this.tps.undoTransaction();
-
+            this.updatetoolBar();
             // MAKE SURE THE LIST GETS PERMANENTLY UPDATED
             this.db.mutationUpdateList(this.state.currentList);
         }
@@ -382,7 +384,7 @@ class App extends React.Component {
     redo = () => {
         if (this.tps.hasTransactionToRedo()) {
             this.tps.doTransaction();
-
+            this.updatetoolBar();
             // MAKE SURE THE LIST GETS PERMANENTLY UPDATED
             this.db.mutationUpdateList(this.state.currentList);
         }
@@ -434,6 +436,7 @@ class App extends React.Component {
     }
 
     render() {
+        let shouldDisableAddList = this.state.editingList || this.state.currentList !== null;
         let canAddSong = this.state.currentList !== null;
         let canUndo = this.tps.hasTransactionToUndo();
         let canRedo = this.tps.hasTransactionToRedo();
@@ -443,6 +446,7 @@ class App extends React.Component {
                 <Banner />
                 <SidebarHeading
                     createNewListCallback={this.createNewList}
+                    shouldDisableAddList={shouldDisableAddList}
                 />
                 <SidebarList
                     currentList={this.state.currentList}
@@ -450,6 +454,7 @@ class App extends React.Component {
                     deleteListCallback={this.markListForDeletion}
                     loadListCallback={this.loadList}
                     renameListCallback={this.renameList}
+                    toggleEdditingListCallback={this.toggleEdditingList}
                 />
                 <EditToolbar
                     key={this.state.editToolbarKey}
